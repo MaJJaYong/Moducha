@@ -11,6 +11,7 @@ import {
   useState,
   MouseEventHandler,
   SetStateAction,
+  useCallback,
 } from 'react';
 
 interface Page {
@@ -47,14 +48,18 @@ const Pagination = ({ page, totalPage, setPage }: Page) => {
 
   const [buttonArray, setButtonArray] = useState<ReactNode[]>([]);
 
-  const updateRange = (newStart: number) => {
+  const updateRange = useCallback((newStart: number) => {
     setRange({
       start: newStart,
       end: Math.min(totalPage, newStart + perSection - 1),
     });
     setPage(newStart);
-  };
+  }, [setPage, totalPage]);
 
+  useEffect(() => {
+    updateRange(1);
+  }, [totalPage, updateRange]);
+  
   const handlePrev = () => updateRange(Math.max(1, start - perSection));
   const handleNext = () =>
     updateRange(Math.min(start + perSection, startLimit));

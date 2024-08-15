@@ -11,7 +11,7 @@ const SearchBox = ({
 }) => {
   const inputRef = useRef<HTMLInputElement>(null);
   const selectRef = useRef<HTMLSelectElement>(null);
-  const { setSearchBy, setKeyword } = pageData;
+  const { setSearchBy, setKeyword, setPage } = pageData;
   const handleSearch = () => {
     if (
       !inputRef.current ||
@@ -22,6 +22,7 @@ const SearchBox = ({
     }
     setSearchBy(selectRef.current.value);
     setKeyword(inputRef.current.value);
+    setPage(1);
   };
   return (
     <div className={className}>
