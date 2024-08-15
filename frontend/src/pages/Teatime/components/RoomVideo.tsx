@@ -48,7 +48,7 @@ export default function RoomVideo({
       <video 
         ref={videoElement} 
         id={track.sid}
-        className='w-full h-full object-cover -scale-x-100'
+        className={`w-full h-full object-cover ${track.source === 'screen_share' ? '' : '-scale-x-100'}`}
       />
     </div>
   );
