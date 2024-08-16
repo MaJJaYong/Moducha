@@ -27,8 +27,6 @@
 # 환경변수
 
 ## frontend .env
-- 민감한 정보는 알잘딱하게 대충 채워주세요
-
   ```json
   {/* .env-cmdrc.json */}
   {
@@ -95,6 +93,7 @@ AWS_REGION_STATIC = S3 버킷이 위치한 AWS 리전. 우리 프로젝트는 ap
 
 ---
 # 시나리오
+
 1. moducha.site로 접속한다.
 2. 메인 페이지에서 로그인한다.
 
