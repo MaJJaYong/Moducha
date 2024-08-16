@@ -27,14 +27,13 @@ public class ShareBoardSearchRepository {
 
     public List<ShareBoard> findAllBySortAndKeyword(
             String sort, Integer page, Integer perPage, String searchBy, String keyword) {
-        List<ShareBoard> results = queryFactory
+        return queryFactory
                 .selectFrom(shareBoard)
                 .where(createWhereCondition(sort, searchBy, keyword))
                 .orderBy(getOrderSpecifier(sort))
                 .offset((long) (page - 1) * perPage)
                 .limit(perPage)
                 .fetch();
-        return results;
     }
 
     private Predicate createWhereCondition(String sort, String searchBy, String keyword) {
@@ -42,19 +41,20 @@ public class ShareBoardSearchRepository {
         BooleanExpression baseCondition = shareBoard.activated.isTrue();
 
         if ("urgent".equals(sort)) {
-            baseCondition.and(shareBoard.endDate.gt(LocalDateTime.now()));
+            baseCondition = baseCondition.and(shareBoard.endDate.gt(LocalDateTime.now()));
         }
 
         if (searchBy != null && keyword != null) {
+            System.out.println("searchBy: " + searchBy);
             switch (searchBy) {
                 case "title":
-                    baseCondition.and(shareBoard.title.contains(keyword));
+                    baseCondition = baseCondition.and(shareBoard.title.contains(keyword));
                     break;
                 case "content":
-                    baseCondition.and(shareBoard.content.contains(keyword));
+                    baseCondition = baseCondition.and(shareBoard.content.contains(keyword));
                     break;
                 case "writer":
-                    baseCondition.and(shareBoard.user.nickname.contains(keyword));
+                    baseCondition = baseCondition.and(shareBoard.user.nickname.contains(keyword));
                     break;
             }
         }

@@ -420,6 +420,57 @@ public class GetShareBoardListTest {
         }
     }
 
+
+    @DisplayName("getShareBoardList : 나눔 게시판 목록 검색 성공 - perPage가 10일(title)")
+    @Test
+    public void search_Success_2() throws Exception {
+        // given
+        User user = userRepository.findByAuthIdAndActivated("authId", true)
+                .orElseThrow(() -> new RuntimeException("테스트를 위한 유저 생성 실패"));
+
+        List<ShareBoard> shareBoards = new ArrayList<>();
+        for (int i = 0; i < 10; i++) {
+            final String title = "Title" + i;
+            final String content = "Content" + i;
+            final Integer maxParticipants = 10 + i;
+            final LocalDateTime endDate = LocalDateTime.now().plusWeeks(1L + i);
+            shareBoards.add(shareBoardRepository.save(ShareBoard.builder()
+                    .title(title)
+                    .content(content)
+                    .maxParticipants(maxParticipants)
+                    .endDate(endDate)
+                    .user(user)
+                    .build()));
+            try {
+                Thread.sleep(100);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+        }
+        final String url = "/api/v1/shares";
+
+        // when
+        ResultActions resultActions = mockMvc.perform(get(url)
+                .param("sort", "latest")
+                .param("perPage", "10")
+                .param("page", "1")
+                .param("searchBy", "title")
+                .param("keyword", "Title2")
+                .contentType(MediaType.APPLICATION_JSON));
+
+        // then
+        resultActions.andExpect(status().isOk());
+        resultActions.andExpect(jsonPath("$.data.length()").value(1));
+        resultActions.andExpect(jsonPath("$.data[0].boardId").value(shareBoards.get(2).getId()))
+                .andExpect(jsonPath("$.data[0].title").value(shareBoards.get(2).getTitle()))
+                .andExpect(jsonPath("$.data[0].content").value(shareBoards.get(2).getContent()))
+                .andExpect(jsonPath("$.data[0].maxParticipants").value(
+                        shareBoards.get(2).getMaxParticipants()))
+                .andExpect(jsonPath(("$.data[0].participants")).value(0))
+                .andExpect(jsonPath(("$.data[0].nickname")).value(user.getNickname()))
+                .andExpect(jsonPath("$.data[0].viewCount").value(0));
+    }
+
     //  나눔 게시판이 1개일 때 (최신 순)
     //  아무런 나눔 게시판이 없을 때 (최신 순)
     //  활성화된 나눔 게시판이 없을 때 (최신 순)
