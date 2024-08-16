@@ -93,8 +93,6 @@ AWS_REGION_STATIC = S3 버킷이 위치한 AWS 리전. 우리 프로젝트는 ap
 
 ---
 # 시나리오
-
-1. moducha.site로 접속한다.
-2. 메인 페이지에서 로그인한다.
+- [프로젝트 README.md 참고](../README.md)
 
 ---
