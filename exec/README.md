@@ -89,7 +89,25 @@ AWS_REGION_STATIC = S3 버킷이 위치한 AWS 리전. 우리 프로젝트는 ap
 - certbot을 통해서 HTTPS 인증서를 발급받아야 합니다.
 - openvidu 설정 파일을 수정해야 합니다.
   - caddy.yaml에 http, https 포트번호를 설정해야 합니다.
+    ```
+    apps:
+    # ... 중략 ... #
+    http:
+    http_port: 8445
+    https_port: 8443
+    ```
   - livekit.yaml에 webhook 받는 주소를 수정해야 합니다.
+    ```
+    webhook:
+    # ... 중략 ... #
+    urls:
+        - https://moducha.site/api/v1/livekit/webhook
+    ```
+  - mute 해제를 위해 livekit.yaml에 설정 추가
+    ```
+    room:
+        enable_remote_unmute: true
+    ```
 
 ---
 # 시나리오
