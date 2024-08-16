@@ -92,16 +92,16 @@ AWS_REGION_STATIC = S3 버킷이 위치한 AWS 리전. 우리 프로젝트는 ap
     ```
     apps:
     # ... 중략 ... #
-    http:
-    http_port: 8445
-    https_port: 8443
+        http:
+            http_port: 8445
+            https_port: 8443
     ```
   - livekit.yaml에 webhook 받는 주소를 수정해야 합니다.
     ```
     webhook:
     # ... 중략 ... #
-    urls:
-        - https://moducha.site/api/v1/livekit/webhook
+        urls:
+            - https://moducha.site/api/v1/livekit/webhook
     ```
   - mute 해제를 위해 livekit.yaml에 설정 추가
     ```
