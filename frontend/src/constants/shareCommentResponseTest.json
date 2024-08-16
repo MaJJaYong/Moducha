@@ -1,0 +1,27 @@
+{
+  "data": [
+    {
+      "commentId": 1,
+      "boardId": 1,
+      "content": "국가는 모성의 보호를 위하여 노력하여야 한다. 선거와 국민투표의 공정한 관리 및 정당에 관한 사무를 처리하기 위하여 선거관리위원회를 둔다. 전직대통령의 신분과 예우에 관하여는 법률로 정한다.",
+      "createdDate": "2023-07-15T14:30:00Z",
+      "nickname": "홍길동",
+      "replyCount": 0,
+      "userId": "1"
+    },
+    {
+      "commentId": 2,
+      "boardId": 1,
+      "content": "When is the next event?",
+      "createdDate": "2023-07-16T10:00:00Z",
+      "nickname": "엄준식",
+      "replyCount": 7,
+      "userId": "2"
+    }
+  ],
+  "pagination": {
+    "total": 25,
+    "page": 1,
+    "perPage": 10
+  }
+}

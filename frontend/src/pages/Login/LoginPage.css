@@ -1,0 +1,80 @@
+/* LoginPage 컴포넌트 내부에만 적용될 스타일 */
+.login-container {
+  display: flex;
+  height: calc(100vh - 80px); /* 네비게이션 바의 높이를 고려 */
+  width: 100vw;
+  overflow: hidden;
+}
+
+.login-container .image-container {
+  flex: 1;
+  overflow: hidden;
+}
+
+.login-container .image-container img {
+  width: 100%;
+  height: 110%;
+  object-fit: cover;
+  max-width: 100%;
+  max-height: 100%;
+}
+
+.login-container .button-container {
+  flex: 1;
+  position: relative; /* 자식 요소에 대한 절대 위치 설정을 위해 상대적 위치로 설정 */
+  overflow: hidden;
+  padding: 0 20px;
+  box-sizing: border-box;
+}
+
+.login-container .login-title {
+  position: absolute;
+  top: 30%; /* 컨테이너의 상단에서 30% 위치 */
+  width: 100%;
+  font-size: 3rem; /* h1 크기로 조정 */
+  text-align: center;
+}
+
+.login-container .google-button {
+  position: absolute;
+  bottom: 30%; /* 컨테이너의 하단에서 30% 위치 */
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+/* 반응형 디자인 */
+@media (max-width: 768px) {
+  .login-container {
+    flex-direction: column;
+  }
+
+  .login-container .image-container,
+  .login-container .button-container {
+    width: 100%;
+    height: 50%;
+  }
+
+  .login-container .image-container img {
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    max-height: 100%;
+  }
+
+  .login-container .button-container {
+    height: 50%;
+    padding: 10px;
+    position: relative; /* 자식 요소에 대한 절대 위치 설정을 위해 상대적 위치로 설정 */
+  }
+
+  .login-container .login-title {
+    top: 10%; /* 모바일 화면에서도 상단에서 10% 위치 */
+    font-size: 2rem; /* 모바일에서 폰트 크기 조정 */
+  }
+
+  .login-container .google-button {
+    bottom: 10%; /* 모바일 화면에서도 하단에서 10% 위치 */
+  }
+}

@@ -1,0 +1,20 @@
+@import url('https://fonts.googleapis.com/css2?family=Noto+Sans+KR:wght@100..900&display=swap');
+
+.main-container {
+  font-family: 'Noto Sans KR', sans-serif;
+  margin-left: auto;
+  margin-right: auto;
+}
+
+.ck-content {
+  font-family: 'Noto Sans KR', sans-serif;
+  line-height: 1.6;
+  word-break: break-word;
+  overflow: scroll;
+  height: 30rem;
+}
+
+.editor-container_classic-editor .editor-container__editor {
+  /* min-width: 795px;
+	max-width: 795px; */
+}

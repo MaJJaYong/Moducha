@@ -1,0 +1,112 @@
+pipeline {
+    agent any
+    options {
+        skipDefaultCheckout(true)
+    }
+    tools { nodejs "20.15.0"}
+    environment {
+        AWS_IP = credentials('AWS_IP')
+    }
+    triggers {
+        pollSCM('H 9,12,17 * * *')
+    }
+    stages {
+        stage ('clean workspace') {
+            steps {
+                echo 'Cleaning workspace...'
+                cleanWs()
+                echo 'Cleaning done'
+            } 
+        }
+        stage ('clone') {
+            steps {
+                echo 'Cloning...'
+                checkout scm
+                git branch: 'dev', credentialsId: 'gitlab-repo', url: 'https://lab.ssafy.com/s11-webmobile1-sub2/S11P12D202.git'
+                echo 'Cloning done'
+            }
+        }
+        stage ('build and Deploy') {
+            parallel{
+                stage('BE Proccess'){
+                    stages{
+                        stage('BE-Build') {
+                            steps {
+                                echo "BE Building.."
+                                dir('./backend') {
+                                    sh 'chmod +x ./gradlew'
+                                    sh './gradlew clean build -x test'
+                                }
+                            }
+                        }
+                        stage('BE-Delivery') {
+                            steps {
+                                dir('./backend') {
+                                    echo "Delivery BE Image.."
+                                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
+                                        sh "docker build -t $DOCKER_USERNAME/moducha_backend:${env.BUILD_ID} ."
+                                        sh "docker tag $DOCKER_USERNAME/moducha_backend:${env.BUILD_ID} $DOCKER_USERNAME/moducha_backend:latest"
+                                        sh "docker push $DOCKER_USERNAME/moducha_backend:${env.BUILD_ID}"
+                                        sh "docker push $DOCKER_USERNAME/moducha_backend:latest"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                stage('FE Proccess'){
+                    stages{
+                        stage('FE-Build') {
+                            steps {
+                                echo "FE Building.."
+                                dir('./frontend') {
+                                    withCredentials([file(credentialsId: 'frontend-env', variable: 'ENV_FILE')]) {
+                                        sh 'cat $ENV_FILE > .env'
+                                    }
+                                    sh 'npm install'
+                                    sh 'npm run build'
+                                }
+                            }
+                        }
+                        stage('FE-Delivery') {
+                            steps {
+                                dir('./frontend') {
+                                    echo "Delivery FE Image.."
+                                    withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                                        sh "echo $DOCKER_PASSWORD | docker login -u $DOCKER_USERNAME --password-stdin"
+                                        sh "docker build -t $DOCKER_USERNAME/moducha_frontend:${env.BUILD_ID} ."
+                                        sh "docker tag $DOCKER_USERNAME/moducha_frontend:${env.BUILD_ID} $DOCKER_USERNAME/moducha_frontend:latest"
+                                        sh "docker push $DOCKER_USERNAME/moducha_frontend:${env.BUILD_ID}"
+                                        sh "docker push $DOCKER_USERNAME/moducha_frontend:latest"
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        stage('Deploy to EC2') {
+            steps {
+                echo 'EC2에 배포 시작!'
+                withCredentials([usernamePassword(credentialsId: 'dockerhub', usernameVariable: 'DOCKER_USERNAME', passwordVariable: 'DOCKER_PASSWORD')]) {
+                    sshagent(credentials: ['ubuntu']) { 
+                        sh "ssh -o StrictHostKeyChecking=no ubuntu@$AWS_IP 'cd S11P12D202 && sudo docker-compose --profile prod down'"
+                        sh "ssh -o StrictHostKeyChecking=no ubuntu@$AWS_IP 'frontend_images=\$(sudo docker images -q $DOCKER_USERNAME/moducha_frontend:latest) && if [ -n \"\$frontend_images\" ]; then sudo docker rmi -f \$frontend_images; fi'"
+                        sh "ssh -o StrictHostKeyChecking=no ubuntu@$AWS_IP 'backend_images=\$(sudo docker images -q $DOCKER_USERNAME/moducha_backend:latest) && if [ -n \"\$backend_images\" ]; then sudo docker rmi -f \$backend_images; fi'"
+                        sh "ssh -o StrictHostKeyChecking=no ubuntu@$AWS_IP 'sudo docker image prune -f'"
+                        sh "ssh -o StrictHostKeyChecking=no ubuntu@$AWS_IP 'cd S11P12D202 && sudo docker-compose --profile prod up -d'"
+                    }
+                }
+                echo 'EC2에 배포 완료!'
+            } 
+        }
+    }
+    post {
+        always {
+            cleanWs(cleanWhenNotBuilt: false, deleteDirs: true, 
+            disableDeferredWipeout: true, notFailBuild: true)
+        }
+    }
+}

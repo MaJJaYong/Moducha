@@ -1,0 +1,158 @@
+# 선행 조건
+# 0. window는 cmd, powershell에서만 실행할 것. (wsl2는 권한 문제로 gradle 빌드 불가)
+# 1. 기존의 docker image 삭제 (frontend, backend)
+# 2. react build
+# 3. spring build - ./gradlew clean build -x test
+# 4. profile 설정 후  compose - $env:PROFILE = "docker"; docker compose up -d
+# 5. 이 모든 과정이 귀찮다면 ./init.sh 실행
+
+services:
+
+  db:
+    image: mysql:8.4.1
+    volumes:
+      - 'mysql_data:/var/lib/mysql'
+    profiles: ["dev", "prod"]
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      TZ: Asia/Seoul
+      LANG: C.UTF-8
+    healthcheck:
+      test: [ "CMD", "mysqladmin" ,"ping", "-h", "localhost" ]
+      timeout: 20s
+      retries: 10
+    expose:
+      - "3306"
+    networks:
+      - moducha
+    container_name: moducha_db
+
+  backend-dev:
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - dev
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    image: moducha_backend
+    env_file: '.env'
+    restart: 'always'
+    environment:
+      SPRING_PROFILES_ACTIVE: ${PROFILE}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_DB: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      DDL_AUTO_OPTION: ${DDL_AUTO_OPTION}
+      GOOGLE_CLIENT_NAME: ${GOOGLE_CLIENT_NAME}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      GOOGLE_AUTHORIZATION_GRANT_TYPE: ${GOOGLE_AUTHORIZATION_GRANT_TYPE}
+      GOOGLE_SCOPE: ${GOOGLE_SCOPE}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      REDIRECT_URI: ${REDIRECT_URI}
+      MULTIPART_ENABLED: ${MULTIPART_ENABLED}
+      MAX_FILE_SIZE: ${MAX_FILE_SIZE}
+      MAX_REQUEST_SIZE: ${MAX_REQUEST_SIZE}
+      PROFILES_INCLUDE: ${PROFILES_INCLUDE}
+      AWS_CREDENTIALS_ACCESSKEY: ${AWS_CREDENTIALS_ACCESSKEY}
+      AWS_CRETENDIALS_SECRETKEY: ${AWS_CRETENDIALS_SECRETKEY}
+      AWS_S3_BUCKETNAME: ${AWS_S3_BUCKETNAME}
+      AWS_REGION_STATIC: ${AWS_REGION_STATIC}
+    expose:
+      - "8080"
+    networks:
+      - moducha
+    container_name: moducha_backend
+
+  backend-prod:
+    depends_on:
+      db:
+        condition: service_healthy
+    profiles:
+      - prod
+    image: ramen4598/moducha_backend
+    env_file: '.env'
+    restart: 'always'
+    environment:
+      SPRING_PROFILES_ACTIVE: ${PROFILE}
+      MYSQL_HOST: ${MYSQL_HOST}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_DB: ${MYSQL_DB}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      JWT_SECRET_KEY: ${JWT_SECRET_KEY}
+      DDL_AUTO_OPTION: ${DDL_AUTO_OPTION}
+      GOOGLE_CLIENT_NAME: ${GOOGLE_CLIENT_NAME}
+      GOOGLE_CLIENT_ID: ${GOOGLE_CLIENT_ID}
+      GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET}
+      GOOGLE_REDIRECT_URI: ${GOOGLE_REDIRECT_URI}
+      GOOGLE_AUTHORIZATION_GRANT_TYPE: ${GOOGLE_AUTHORIZATION_GRANT_TYPE}
+      GOOGLE_SCOPE: ${GOOGLE_SCOPE}
+      LIVEKIT_API_KEY: ${LIVEKIT_API_KEY}
+      LIVEKIT_API_SECRET: ${LIVEKIT_API_SECRET}
+      REDIRECT_URI: ${REDIRECT_URI}
+    expose:
+      - "8080"
+    networks:
+      - moducha
+    container_name: moducha_backend
+
+  frontend-dev:
+    depends_on:
+      - backend-dev
+    profiles:
+      - dev
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+      args:
+        PROFILE: ${PROFILE}
+    image: moducha_frontend
+    volumes:
+      - "./frontend/nginx/localhost.conf:/etc/nginx/conf.d/localhost.conf"
+      - "./frontend/nginx/localhostCerts/:/etc/nginx/certs/"
+    restart: 'always'
+    ports:
+      - "80:80"
+      - "443:443"
+    container_name: moducha_frontend
+    networks:
+      - moducha
+    
+
+  frontend-prod:
+    depends_on:
+      - backend-prod
+    profiles:
+      - prod
+    image: ramen4598/moducha_frontend
+    volumes:
+      - "/etc/letsencrypt/live/moducha.site/fullchain.pem:/etc/letsencrypt/live/moducha.site/fullchain.pem"
+      - "/etc/letsencrypt/live/moducha.site/privkey.pem:/etc/letsencrypt/live/moducha.site/privkey.pem"
+      - "/etc/nginx/:/etc/nginx/"
+      - "./frontend/nginx/moducha.conf:/etc/nginx/sites-available/moducha.conf"
+    restart: 'always'
+    ports:
+      - "80:80"
+      - "443:443"
+    container_name: moducha_frontend
+    networks:
+      - moducha
+
+volumes:
+  mysql_data:
+
+networks:
+  moducha:
+    driver: bridge
